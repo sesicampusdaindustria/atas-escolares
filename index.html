@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Registro de Atas Pedagógicas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800">
+
+    <!-- CABEÇALHO DA ESCOLA -->
+    <header class="bg-blue-700 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2.5 rounded-lg text-blue-700 font-bold text-xl shadow-sm">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">Portal Escolar · Atas Pedagógicas</h1>
+                    <p class="text-xs text-blue-200">Acompanhamento e Registro de Ocorrências</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 text-sm bg-blue-800 px-3 py-1.5 rounded-full border border-blue-600">
+                <i class="fa-solid fa-user-tie text-blue-300"></i>
+                <span>Sessão: <strong>Professores & Orientação Pedagógica</strong></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVEGAÇÃO POR ABAS -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 flex justify-around sm:justify-start space-x-2 sm:space-x-8 overflow-x-auto">
+            <button onclick="switchTab('registro')" id="tab-registro" class="tab-btn active py-3 px-3 sm:px-4 text-sm sm:text-base font-medium flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-pen-to-square"></i> Registrar Nova Ata
+            </button>
+            <button onclick="switchTab('historico')" id="tab-historico" class="tab-btn py-3 px-3 sm:px-4 text-sm sm:text-base font-medium flex items-center gap-2 whitespace-nowrap text-gray-600 hover:text-blue-600">
+                <i class="fa-solid fa-clipboard-list"></i> Histórico / Orientação Pedagógica
+            </button>
+            <button onclick="switchTab('gestao')" id="tab-gestao" class="tab-btn py-3 px-3 sm:px-4 text-sm sm:text-base font-medium flex items-center gap-2 whitespace-nowrap text-gray-600 hover:text-blue-600">
+                <i class="fa-solid fa-users-gear"></i> Gestão de Turmas & Alunos
+            </button>
+        </div>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- ABA 1: REGISTRAR NOVA ATA -->
+        <section id="sec-registro" class="block">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-4xl mx-auto">
+                <div class="border-b border-gray-100 pb-4 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-file-circle-plus text-blue-600"></i> Formulário de Ocorrência / Ata
+                        </h2>
+                        <p class="text-xs text-gray-500 mt-1">Preencha os dados da aula para notificar a Orientação Pedagógica.</p>
+                    </div>
+                    <span class="text-xs bg-blue-50 text-blue-700 font-semibold px-2.5 py-1 rounded-md border border-blue-200" id="clock-display"></span>
+                </div>
+
+                <form id="form-ata" onsubmit="submeterAta(event)" class="space-y-5">
+                    <!-- Linha 1: Professor e Disciplina -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="professor" class="block text-xs font-semibold text-gray-700 mb-1">Nome do Professor *</label>
+                            <input type="text" id="professor" required placeholder="Ex: Prof. Roberto Silva" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border">
+                        </div>
+                        <div>
+                            <label for="materia" class="block text-xs font-semibold text-gray-700 mb-1">Disciplina / Matéria</label>
+                            <input type="text" id="materia" placeholder="Ex: Matemática, História..." class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border">
+                        </div>
+                    </div>
+
+                    <!-- Linha 2: Turma e Aluno (Seleção Dinâmica) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                        <div>
+                            <label for="turma" class="block text-xs font-bold text-blue-900 mb-1">1. Selecione a Turma *</label>
+                            <select id="turma" onchange="carregarAlunosPorTurma()" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border bg-white">
+                                <!-- Preenchido via JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="aluno" class="block text-xs font-bold text-blue-900 mb-1">2. Selecione o Aluno *</label>
+                            <select id="aluno" required disabled class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border bg-white disabled:bg-gray-100 disabled:text-gray-400">
+                                <option value="">Primeiro selecione a turma acima</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Linha 3: Tipo de Ocorrência -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-2">Tipo de Ocorrência *</label>
+                        <div class="grid grid-cols-5 gap-2 sm:gap-3">
+                            <label class="flex flex-col items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-gray-50 bg-white aspect-square text-center transition-all">
+                                <input type="radio" name="tipo_ocorrencia" value="Acadêmico" checked class="text-blue-600 focus:ring-blue-500 mb-1.5">
+                                <i class="fa-solid fa-book-open text-blue-500 text-base mb-1"></i>
+                                <span class="text-[11px] font-semibold text-gray-700 leading-tight">Acadêmico</span>
+                            </label>
+                            <label class="flex flex-col items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-gray-50 bg-white aspect-square text-center transition-all">
+                                <input type="radio" name="tipo_ocorrencia" value="Indisciplina" class="text-blue-600 focus:ring-blue-500 mb-1.5">
+                                <i class="fa-solid fa-triangle-exclamation text-red-500 text-base mb-1"></i>
+                                <span class="text-[11px] font-semibold text-gray-700 leading-tight">Indisciplina</span>
+                            </label>
+                            <label class="flex flex-col items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-gray-50 bg-white aspect-square text-center transition-all">
+                                <input type="radio" name="tipo_ocorrencia" value="Eletrônicos" class="text-blue-600 focus:ring-blue-500 mb-1.5">
+                                <i class="fa-solid fa-mobile-screen-button text-amber-500 text-base mb-1"></i>
+                                <span class="text-[11px] font-semibold text-gray-700 leading-tight">Eletrônicos</span>
+                            </label>
+                            <label class="flex flex-col items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-gray-50 bg-white aspect-square text-center transition-all">
+                                <input type="radio" name="tipo_ocorrencia" value="Elogio" class="text-blue-600 focus:ring-blue-500 mb-1.5">
+                                <i class="fa-solid fa-star text-emerald-500 text-base mb-1"></i>
+                                <span class="text-[11px] font-semibold text-gray-700 leading-tight">Elogio</span>
+                            </label>
+                            <label class="flex flex-col items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-gray-50 bg-white aspect-square text-center transition-all">
+                                <input type="radio" name="tipo_ocorrencia" value="Outros" class="text-blue-600 focus:ring-blue-500 mb-1.5">
+                                <i class="fa-solid fa-ellipsis text-gray-500 text-base mb-1"></i>
+                                <span class="text-[11px] font-semibold text-gray-700 leading-tight">Outros</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Linha 4: Relato detalhado -->
+                    <div>
+                        <label for="relato" class="block text-xs font-semibold text-gray-700 mb-1">Relato Detalhado da Ocorrência *</label>
+                        <textarea id="relato" rows="4" required placeholder="Descreva os fatos ocorridos com clareza e objetividade..." class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border"></textarea>
+                    </div>
+
+                    <!-- Linha 5: Ação / Encaminhamento -->
+                    <div>
+                        <label for="acao" class="block text-xs font-semibold text-gray-700 mb-1">Ação Tomada pelo Professor na Aula</label>
+                        <input type="text" id="acao" placeholder="Ex: Conversado individualmente, recolhido celular, trocado de lugar..." class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border">
+                    </div>
+
+                    <!-- Botão de Envio -->
+                    <div class="pt-3">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-base">
+                            <i class="fa-solid fa-paper-plane"></i> Enviar Registros para a Orientação Pedagógica
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ABA 2: HISTÓRICO / ORIENTAÇÃO PEDAGÓGICA -->
+        <section id="sec-historico" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <!-- Cabeçalho e Filtros -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-5 mb-5">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-box-archive text-blue-600"></i> Central de Atas Registradas
+                        </h2>
+                        <p class="text-xs text-gray-500 mt-1">Consulte, filtre e analise o histórico pedagógico dos alunos.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-excel"></i> Exportar Excel / CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Barra de Filtros -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 bg-gray-50 p-3.5 rounded-lg border border-gray-200">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Filtrar por Turma</label>
+                        <select id="filtro-turma" onchange="aplicarFiltros()" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                            <option value="">Todas as Turmas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Filtrar por Tipo</label>
+                        <select id="filtro-tipo" onchange="aplicarFiltros()" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                            <option value="">Todos os Tipos</option>
+                            <option value="Acadêmico">Acadêmico</option>
+                            <option value="Indisciplina">Indisciplina</option>
+                            <option value="Eletrônicos">Eletrônicos</option>
+                            <option value="Elogio">Elogio</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Buscar por Aluno</label>
+                        <input type="text" id="filtro-busca" onkeyup="aplicarFiltros()" placeholder="Nome do aluno..." class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                    </div>
+                </div>
+
+                <!-- Tabela de Registros -->
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-200">
+                            <tr>
+                                <th class="px-4 py-3">Data/Hora</th>
+                                <th class="px-4 py-3">Aluno</th>
+                                <th class="px-4 py-3">Turma</th>
+                                <th class="px-4 py-3">Tipo</th>
+                                <th class="px-4 py-3">Professor</th>
+                                <th class="px-4 py-3">Relato</th>
+                                <th class="px-4 py-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-historico">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 3: GESTÃO DE TURMAS & ALUNOS -->
+        <section id="sec-gestao" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Coluna de Atualização da Turma -->
+                <div class="md:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-blue-600"></i> Atualizar Lista de Alunos
+                    </h2>
+                    <p class="text-xs text-gray-500 mb-4">Cole a lista completa de alunos para atualizar a turma a cada novo trimestre.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Selecione a Turma</label>
+                            <select id="gestao-turma-select" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Lista de Alunos (Um nome por linha)</label>
+                            <textarea id="gestao-alunos-textarea" rows="10" placeholder="Exemplo:&#10;Ana Clara Souza&#10;Bruno Silva&#10;Carlos Eduardo" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono p-2 border"></textarea>
+                        </div>
+
+                        <button onclick="salvarListaAlunos()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-all text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Atualizar Turma
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Coluna de Lista Atual por Turma -->
+                <div class="md:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-blue-600"></i> Alunos Cadastrados
+                        </h2>
+                        <select id="visualizar-turma-select" onchange="renderizarAlunosCadastrados()" class="text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                            <!-- Preenchido via JS -->
+                        </select>
+                    </div>
+
+                    <div id="lista-alunos-cadastrados" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[450px] overflow-y-auto p-1">
+                        <!-- Alunos da turma escolhida aparecerão aqui -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE DETALHES DA ATA -->
+    <div id="modal-detalhes" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-xl w-full p-6 relative">
+            <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-file-lines text-blue-600"></i> Detalhes da Ocorrência
+            </h3>
+            <div id="modal-conteudo" class="space-y-3 text-sm">
+                <!-- Preenchido via JS -->
+            </div>
+            <div class="mt-6 pt-3 border-t border-gray-100 text-right">
+                <button onclick="fecharModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg text-xs">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENSAGEM TOAST/NOTIFICAÇÃO -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-lg hidden flex items-center gap-3 z-50 text-sm font-medium">
+        <i class="fa-solid fa-circle-check text-lg"></i>
+        <span id="toast-msg">Operação realizada com sucesso!</span>
+    </div>
+
+    <!-- JAVASCRIPT DA APLICAÇÃO -->
+    <script>
+        // BASE DE DADOS INICIAL DE TURMAS E ALUNOS (6º ao 9º Ano A-D | 1ª a 3ª Série A-C)
+        let bancoTurmas = {
+            "6º Ano A": ["Ana Clara Souza", "Bruno Henrique Oliveira", "Carlos Eduardo Lima", "Daniela Ferreira", "Eduardo Santos"],
+            "6º Ano B": ["Felipe Augusto", "Gabriel Mendes", "Helena Castro", "Igor Rodrigues", "Julia Paiva"],
+            "6º Ano C": ["Kevin Lucas", "Laura Beatriz", "Matheus Ramos", "Natalia Faria", "Otavio Neto"],
+            "6º Ano D": ["Paula Regina", "Rafael Viana", "Sophia Martins", "Thiago Alcantara", "Vinicius Junior"],
+            
+            "7º Ano A": ["Alice Fonseca", "Bernardo Costa", "Caio Ribeiro", "Davi Lucca", "Enzo Gabriel"],
+            "7º Ano B": ["Fernanda Torres", "Guilherme Arantes", "Heitor Schmidt", "Isabela Nogueira", "Joao Pedro"],
+            "7º Ano C": ["Lara Maria", "Manuela Silva", "Nicolas Rocha", "Olivia Palhares", "Pedro Henrique"],
+            "7º Ano D": ["Quentin Tarantino", "Renan Silveira", "Sabrina Sato", "Tomas Gonzaga", "Uriel Santos"],
+            
+            "8º Ano A": ["Arthur Pendelton", "Beatriz Reboucas", "Clara Nunes", "Diego Maradona", "Emily Watson"],
+            "8º Ano B": ["Fabricio Bolivar", "Gabriela Cravo", "Hugo Boss", "Ingrid Bergman", "Jonas Brothers"],
+            "8º Ano C": ["Karem Abdul", "Leonardo Da Vinci", "Mariana Ximenes", "Neymar Junior", "Orlando Bloom"],
+            "8º Ano D": ["Patricia Pillar", "Rachel Sheherazade", "Samuel Rosa", "Tarcisio Meira", "Ursula Corbero"],
+            
+            "9º Ano A": ["Alexandre Magno", "Bianca Andrade", "Cristiano Ronaldo", "Debora Secco", "Erick Jacquin"],
+            "9º Ano B": ["Fernando Pessoa", "Gisele Bundchen", "Heraldo Pereira", "Ivete Sangalo", "Jorge Ben"],
+            "9º Ano C": ["Katia Cega", "Luiz Gonzaga", "Marta Vieira", "Nelson Mandela", "Oswaldo Cruz"],
+            "9º Ano D": ["Pablo Picasso", "Quenia Abreu", "Rodrigo Faro", "Selton Mello", "Tirullipa Junior"],
+
+            "1ª Série A": ["Agatha Christie", "Brad Pitt", "Camila Pitanga", "Daniel Craig", "Elza Soares"],
+            "1ª Série B": ["Freddie Mercury", "Gal Costa", "Harrison Ford", "Isabeli Fontana", "Jack Sparrow"],
+            "1ª Série C": ["Keanu Reeves", "Ludmilla Oliveira", "Milton Nascimento", "Nicole Kidman", "Oscar Wilde"],
+
+            "2ª Série A": ["Ayrton Senna", "Bruna Marquezine", "Chico Buarque", "Dira Paes", "Ewan McGregor"],
+            "2ª Série B": ["Fátima Bernardes", "Gilberto Gil", "Hebe Camargo", "Itamar Assumpção", "Juliana Paes"],
+            "2ª Série C": ["Kaká Leite", "Luan Santana", "Marisa Monte", "Nando Reis", "Anitta Machado"],
+
+            "3ª Série A": ["Alceu Valença", "Babu Santana", "Cazuza Araujo", "Djavan Caetano", "Elis Regina"],
+            "3ª Série B": ["Fagner Silva", "Gretchen Rocha", "Herbert Vianna", "Inês Brasil", "Jau Peri"],
+            "3ª Série C": ["Klber Bambam", "Lobão Filho", "Malu Mader", "Ney Matogrosso", "Preta Gil"]
+        };
+
+        // HISTÓRICO PADRÃO DE ATAS
+        let atasCadastradas = [
+            {
+                id: '1',
+                dataHora: '10/11/2026 09:30',
+                professor: 'Prof. Roberto Silva',
+                materia: 'Matemática',
+                turma: '6º Ano A',
+                aluno: 'Bruno Henrique Oliveira',
+                tipo: 'Eletrônicos',
+                relato: 'Aluno se recusou a guardar o aparelho celular após três avisos e atrapalhou a explicação dos exercícios.',
+                acao: 'Conversado individualmente e recolhido o celular para entrega na Orientação Pedagógica ao fim da aula.'
+            },
+            {
+                id: '2',
+                dataHora: '09/11/2026 14:15',
+                professor: 'Profa. Carla Santos',
+                materia: 'Português',
+                turma: '3ª Série A',
+                aluno: 'Bruna Marquezine',
+                tipo: 'Elogio',
+                relato: 'Destaque pelo excelente desempenho na apresentação do seminário de literatura e liderança de grupo.',
+                acao: 'Elogio registrado na ficha pedagógica e parabéns em sala.'
+            }
+        ];
+
+        // INICIALIZAÇÃO DA APLICAÇÃO
+        window.onload = function () {
+            atualizarRelogio();
+            setInterval(atualizarRelogio, 1000);
+
+            // Carregar dados salvos no localStorage se existirem
+            if (localStorage.getItem('bancoTurmas_atas')) {
+                try { bancoTurmas = JSON.parse(localStorage.getItem('bancoTurmas_atas')); } catch(e){}
+            }
+            if (localStorage.getItem('atasCadastradas_atas')) {
+                try { atasCadastradas = JSON.parse(localStorage.getItem('atasCadastradas_atas')); } catch(e){}
+            }
+
+            popularSelectsTurmas();
+            carregarAlunosPorTurma();
+            aplicarFiltros();
+            renderizarAlunosCadastrados();
+        };
+
+        // RELÓGIO DIGITAL
+        function atualizarRelogio() {
+            const agora = new Date();
+            const clockEl = document.getElementById('clock-display');
+            if (clockEl) {
+                clockEl.innerText = agora.toLocaleDateString('pt-BR') + ' - ' + agora.toLocaleTimeString('pt-BR');
+            }
+        }
+
+        // ORDENAÇÃO CUSTOMIZADA DE TURMAS (Ensino Fundamental 6º ao 9º -> Ensino Médio 1ª à 3ª)
+        function obterTurmasOrdenadas() {
+            const turmas = Object.keys(bancoTurmas);
+            return turmas.sort((a, b) => {
+                const ehSerieA = a.includes("Série");
+                const ehSerieB = b.includes("Série");
+                if (!ehSerieA && ehSerieB) return -1;
+                if (ehSerieA && !ehSerieB) return 1;
+                return a.localeCompare(b, 'pt-BR', { numeric: true });
+            });
+        }
+
+        // TROCA DE ABAS
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'text-blue-600'));
+            document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+
+            const tabBtn = document.getElementById(`tab-${tabName}`);
+            const secEl = document.getElementById(`sec-${tabName}`);
+
+            if (tabBtn) tabBtn.classList.add('active');
+            if (secEl) secEl.classList.remove('hidden');
+
+            if (tabName === 'gestao') {
+                carregarTextoGestao();
+                renderizarAlunosCadastrados();
+            }
+        }
+
+        // POPULAR DROPDOWNS DE TURMAS
+        function popularSelectsTurmas() {
+            const selectRegistro = document.getElementById('turma') || document.getElementById('select-turma');
+            const selectFiltro = document.getElementById('filtro-turma');
+            const selectGestao = document.getElementById('gestao-turma-select');
+            const selectVisualizar = document.getElementById('visualizar-turma-select');
+
+            const turmasOrdenadas = obterTurmasOrdenadas();
+
+            let optionsHTML = '<option value="">Selecione a Turma...</option>';
+            let optionsFiltroHTML = '<option value="">Todas as Turmas</option>';
+            let optionsGestaoHTML = '';
+
+            turmasOrdenadas.forEach(turma => {
+                optionsHTML += `<option value="${turma}">${turma}</option>`;
+                optionsFiltroHTML += `<option value="${turma}">${turma}</option>`;
+                optionsGestaoHTML += `<option value="${turma}">${turma}</option>`;
+            });
+
+            if (selectRegistro) selectRegistro.innerHTML = optionsHTML;
+            if (selectFiltro) selectFiltro.innerHTML = optionsFiltroHTML;
+            if (selectGestao) selectGestao.innerHTML = optionsGestaoHTML;
+            if (selectVisualizar) selectVisualizar.innerHTML = optionsGestaoHTML;
+        }
+
+        // CARREGAR ALUNOS DINAMICAMENTE QUANDO A TURMA É SELECIONADA
+        function carregarAlunosPorTurma() {
+            const elTurma = document.getElementById('turma') || document.getElementById('select-turma');
+            const elAluno = document.getElementById('aluno') || document.getElementById('select-aluno');
+
+            if (!elTurma || !elAluno) return;
+
+            const turmaSelecionada = elTurma.value;
+
+            if (!turmaSelecionada || !bancoTurmas[turmaSelecionada]) {
+                elAluno.innerHTML = '<option value="">Primeiro selecione a turma acima</option>';
+                elAluno.disabled = true;
+                return;
+            }
+
+            const alunos = bancoTurmas[turmaSelecionada];
+            if (alunos.length === 0) {
+                elAluno.innerHTML = '<option value="">Nenhum aluno cadastrado nesta turma</option>';
+                elAluno.disabled = true;
+                return;
+            }
+
+            let options = '<option value="">Selecione o Aluno...</option>';
+            alunos.slice().sort().forEach(aluno => {
+                options += `<option value="${aluno}">${aluno}</option>`;
+            });
+
+            elAluno.innerHTML = options;
+            elAluno.disabled = false;
+        }
+
+        // ENVIAR FORMULÁRIO DE ATA
+        function submeterAta(e) {
+            e.preventDefault();
+
+            const elTurma = document.getElementById('turma') || document.getElementById('select-turma');
+            const elAluno = document.getElementById('aluno') || document.getElementById('select-aluno');
+            const elProf = document.getElementById('professor');
+            const elMat = document.getElementById('materia');
+            const elRelato = document.getElementById('relato');
+            const elAcao = document.getElementById('acao');
+
+            const tipoEl = document.querySelector('input[name="tipo_ocorrencia"]:checked');
+            const tipoVal = tipoEl ? tipoEl.value : 'Outros';
+
+            if (!elTurma.value || !elAluno.value || !elProf.value.trim() || !elRelato.value.trim()) {
+                mostrarToast('Por favor, preencha todos os campos obrigatórios.', 'erro');
+                return;
+            }
+
+            const novaAta = {
+                id: Date.now().toString(),
+                dataHora: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                professor: elProf.value.trim(),
+                materia: elMat.value.trim() || 'Geral',
+                turma: elTurma.value,
+                aluno: elAluno.value,
+                tipo: tipoVal,
+                relato: elRelato.value.trim(),
+                acao: elAcao.value.trim() || 'Nenhuma ação informada.'
+            };
+
+            atasCadastradas.unshift(novaAta);
+            salvarDadosLocais();
+
+            // Resetar formulário
+            document.getElementById('form-ata').reset();
+            carregarAlunosPorTurma();
+            aplicarFiltros();
+
+            mostrarToast('Ata pedagógica registrada com sucesso!');
+        }
+
+        // SALVAR NO LOCALSTORAGE
+        function salvarDadosLocais() {
+            localStorage.setItem('bancoTurmas_atas', JSON.stringify(bancoTurmas));
+            localStorage.setItem('atasCadastradas_atas', JSON.stringify(atasCadastradas));
+        }
+
+        // FILTRAR E RENDERIZAR TABELA DE HISTÓRICO
+        function aplicarFiltros() {
+            const filtroTurmaEl = document.getElementById('filtro-turma');
+            const filtroTipoEl = document.getElementById('filtro-tipo');
+            const filtroBuscaEl = document.getElementById('filtro-busca');
+
+            if (!filtroTurmaEl || !filtroTipoEl || !filtroBuscaEl) return;
+
+            const filtroTurma = filtroTurmaEl.value;
+            const filtroTipo = filtroTipoEl.value;
+            const filtroBusca = filtroBuscaEl.value.toLowerCase();
+
+            const tabela = document.getElementById('tabela-historico');
+            if (!tabela) return;
+            tabela.innerHTML = '';
+
+            const filtrados = atasCadastradas.filter(ata => {
+                const matchTurma = !filtroTurma || ata.turma === filtroTurma;
+                const matchTipo = !filtroTipo || ata.tipo === filtroTipo;
+                const matchBusca = !filtroBusca || ata.aluno.toLowerCase().includes(filtroBusca) || ata.professor.toLowerCase().includes(filtroBusca) || ata.relato.toLowerCase().includes(filtroBusca);
+                return matchTurma && matchTipo && matchBusca;
+            });
+
+            if (filtrados.length === 0) {
+                tabela.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500 italic">
+                            Nenhum registro de ata encontrado com os filtros aplicados.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtrados.forEach(ata => {
+                let badgeClass = 'bg-gray-100 text-gray-700';
+                if (ata.tipo === 'Indisciplina') badgeClass = 'bg-red-100 text-red-700 border border-red-200';
+                else if (ata.tipo === 'Eletrônicos') badgeClass = 'bg-amber-100 text-amber-700 border border-amber-200';
+                else if (ata.tipo === 'Elogio') badgeClass = 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+                else if (ata.tipo === 'Acadêmico') badgeClass = 'bg-blue-100 text-blue-700 border border-blue-200';
+                else if (ata.tipo === 'Saúde') badgeClass = 'bg-purple-100 text-purple-700 border border-purple-200';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 hover:bg-gray-50 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500">${ata.dataHora}</td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">${ata.aluno}</td>
+                    <td class="px-4 py-3"><span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded font-medium">${ata.turma}</span></td>
+                    <td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full font-semibold ${badgeClass}">${ata.tipo}</span></td>
+                    <td class="px-4 py-3 text-xs text-gray-600">${ata.professor}<br><span class="text-gray-400">(${ata.materia})</span></td>
+                    <td class="px-4 py-3 text-xs text-gray-600 max-w-xs truncate" title="${ata.relato}">${ata.relato}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="abrirModal('${ata.id}')" class="text-blue-600 hover:text-blue-800 font-medium text-xs bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 transition-all">
+                            <i class="fa-solid fa-eye"></i> Detalhes
+                        </button>
+                    </td>
+                `;
+                tabela.appendChild(tr);
+            });
+        }
+
+        // MODAL DE DETALHES
+        function abrirModal(id) {
+            const ata = atasCadastradas.find(a => a.id === id);
+            if (!ata) return;
+
+            const modalConteudo = document.getElementById('modal-conteudo');
+            if (!modalConteudo) return;
+
+            modalConteudo.innerHTML = `
+                <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200 mb-2">
+                    <div><strong>Aluno:</strong> ${ata.aluno}</div>
+                    <div><strong>Turma:</strong> ${ata.turma}</div>
+                    <div><strong>Data/Hora:</strong> ${ata.dataHora}</div>
+                    <div><strong>Tipo:</strong> ${ata.tipo}</div>
+                    <div><strong>Professor:</strong> ${ata.professor}</div>
+                    <div><strong>Disciplina:</strong> ${ata.materia}</div>
+                </div>
+                <div class="space-y-2 mt-4">
+                    <div>
+                        <strong class="text-gray-700 block mb-1">Relato do Professor:</strong>
+                        <p class="bg-white p-3 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap">${ata.relato}</p>
+                    </div>
+                    <div class="mt-3">
+                        <strong class="text-gray-700 block mb-1">Encaminhamento / Ação Tomada:</strong>
+                        <p class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-900 whitespace-pre-wrap">${ata.acao}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-detalhes').classList.remove('hidden');
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-detalhes').classList.add('hidden');
+        }
+
+        // GESTÃO DE ALUNOS & TURMAS
+        function carregarTextoGestao() {
+            const selectGestao = document.getElementById('gestao-turma-select');
+            if (!selectGestao) return;
+
+            const turma = selectGestao.value || Object.keys(bancoTurmas)[0];
+            selectGestao.value = turma;
+
+            const alunos = bancoTurmas[turma] || [];
+            document.getElementById('gestao-alunos-textarea').value = alunos.join('\n');
+            
+            const selectVis = document.getElementById('visualizar-turma-select');
+            if (selectVis) selectVis.value = turma;
+            renderizarAlunosCadastrados();
+        }
+
+        const gestaoSelect = document.getElementById('gestao-turma-select');
+        if (gestaoSelect) {
+            gestaoSelect.addEventListener('change', function() {
+                const turma = this.value;
+                const alunos = bancoTurmas[turma] || [];
+                document.getElementById('gestao-alunos-textarea').value = alunos.join('\n');
+                const selectVis = document.getElementById('visualizar-turma-select');
+                if (selectVis) selectVis.value = turma;
+                renderizarAlunosCadastrados();
+            });
+        }
+
+        function salvarListaAlunos() {
+            const turma = document.getElementById('gestao-turma-select').value;
+            const texto = document.getElementById('gestao-alunos-textarea').value;
+
+            if (!turma) {
+                mostrarToast('Selecione uma turma válida.', 'erro');
+                return;
+            }
+
+            const novaLista = texto.split('\n')
+                .map(nome => nome.trim())
+                .filter(nome => nome.length > 0);
+
+            bancoTurmas[turma] = novaLista;
+            salvarDadosLocais();
+
+            carregarAlunosPorTurma();
+            renderizarAlunosCadastrados();
+            mostrarToast(`Lista da turma ${turma} atualizada com sucesso!`);
+        }
+
+        function renderizarAlunosCadastrados() {
+            const selectVis = document.getElementById('visualizar-turma-select');
+            if (!selectVis) return;
+
+            const turma = selectVis.value || Object.keys(bancoTurmas)[0];
+            const container = document.getElementById('lista-alunos-cadastrados');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const alunos = bancoTurmas[turma] || [];
+
+            if (alunos.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 col-span-2 py-4 text-center">Nenhum aluno cadastrado nesta turma.</p>';
+                return;
+            }
+
+            alunos.slice().sort().forEach((aluno, index) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 text-xs text-gray-700';
+                item.innerHTML = `
+                    <span class="font-medium"><i class="fa-solid fa-user text-gray-400 mr-2"></i>${aluno}</span>
+                    <span class="text-gray-400 text-[10px]">#${index + 1}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // EXPORTAR RELATÓRIO PARA EXCEL / CSV
+        function exportarCSV() {
+            if (atasCadastradas.length === 0) {
+                mostrarToast('Não há atas registradas para exportar.', 'erro');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "ID;DataHora;Professor;Materia;Turma;Aluno;Tipo;Relato;Acao\n";
+
+            atasCadastradas.forEach(a => {
+                const relatoClean = `"${a.relato.replace(/"/g, '""')}"`;
+                const acaoClean = `"${a.acao.replace(/"/g, '""')}"`;
+                csvContent += `${a.id};${a.dataHora};${a.professor};${a.materia};${a.turma};${a.aluno};${a.tipo};${relatoClean};${acaoClean}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `atas_pedagogicas_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // TOAST DE NOTIFICAÇÃO
+        function mostrarToast(mensagem, tipo = 'sucesso') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            if (!toast || !toastMsg) return;
+
+            toastMsg.innerText = mensagem;
+            if (tipo === 'erro') {
+                toast.className = toast.className.replace('bg-emerald-600', 'bg-red-600');
+            } else {
+                toast.className = toast.className.replace('bg-red-600', 'bg-emerald-600');
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
